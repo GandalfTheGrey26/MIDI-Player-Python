@@ -101,6 +101,9 @@ def main_scene():
     musicNote = pygame.transform.smoothscale(musicNote, (0.25*musicNote.get_width(),0.25*musicNote.get_height()))
     plusButton = pygame.image.load('Plus_Button.png')
     plusButton = pygame.transform.smoothscale(plusButton, (0.1*plusButton.get_width(),0.1*plusButton.get_height()))
+    pauseButton = pygame.image.load('Pause_Button.png')
+    pauseButton = pygame.transform.smoothscale(pauseButton, (0.08*pauseButton.get_width(),0.08*pauseButton.get_height()))
+
 
     #load the fonts:
     font = pygame.font.SysFont('Arial', 80)
@@ -184,7 +187,10 @@ def main_scene():
                     midi[f'{newSong}'] = f'{midi[songs[currentSong]]}'
                     del midi[songs[currentSong]]
                     del songs[currentSong]
-                    currentSong = len(songs) - 1
+                    currentSong = len(songs)- 1
+            elif x >= 54 and x <= 105 and y >= 2 and y <= 49:
+                play_MIDI('Null.mid', sounds[instruments[currentInstrument]])
+
         
         mainSurface.fill(0)
      
@@ -193,6 +199,13 @@ def main_scene():
      
         #draw the add song button:
         mainSurface.blit(musicNote, (0, 50))
+     
+        #draw the add instrument button:
+        mainSurface.blit(plusButton, (0, 100))
+
+        #draw the pause song button:
+        mainSurface.blit(pauseButton, (55, 0))
+
      
         #draw the rename song button: 
         text = 'Rename Song'
@@ -217,10 +230,6 @@ def main_scene():
         renderedText = font3.render(text, 0, (255, 0, 0))
         text_rect = renderedText.get_rect(center=(145, 888))
         mainSurface.blit(renderedText, text_rect)                                  
-     
-        #draw the add instrument button:
-        mainSurface.blit(plusButton, (0, 100))
-
      
         #draw the song name:
         text = songs[currentSong]
