@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import filedialog
 import sf2_loader as sf
 import pygame
+from mido import MidiFile
+import time
 
 '''
 sf2_loader:
@@ -41,7 +43,7 @@ def play_MIDI(midi_path, sound_path):
     print('Playing the song')
     
 def new_songs():
-    global currentSong, songs, midi
+    global currentSong, songs, midi, duration
     try:
         newSongPaths = get_file_paths('MIDI')
         for i in range(0, len(newSongPaths)):
@@ -55,6 +57,7 @@ def new_songs():
             newSong = e1.get()
             master.destroy()
             if newSong != '':
+                duration[f'{newSong}'] = round(MidiFile(newSongPaths[i]).length)
                 songs.append(newSong)
                 midi[f'{newSong}'] = f'{newSongPaths[i]}'
                 currentSong = len(songs) - 1
@@ -83,7 +86,7 @@ def new_instruments():
         return 'Error'
 
 def main_scene():
-    global songs, midi, currentSong, instruments, sounds, currentInstrument
+    global songs, midi, currentSong, instruments, sounds, currentInstrument, duration
     pygame.init()
     surfaceSize = (1440, 910)
     
@@ -116,6 +119,10 @@ def main_scene():
     currentSong = 0
     currentInstrument = 0
 
+    duration={
+        'Canon In D' : round(MidiFile('Canon_In_D.mid').length)
+        }
+    
     sounds={
         'Full Grand' : 'Full_Grand.SF2'
         }
@@ -123,7 +130,11 @@ def main_scene():
     midi={
         'Canon In D' : 'Canon_In_D.mid'
         }
-
+    
+    
+    playing = False
+    startTime = time.time()
+            
     #-----------Main Game Loop--------------
     while True:
         ev = pygame.event.poll()
@@ -134,6 +145,8 @@ def main_scene():
             print(x, y)
             if x >= 0 and x <= 49 and y >= 0 and y <= 47:
                 play_MIDI(midi[songs[currentSong]], sounds[instruments[currentInstrument]])
+                playing = True
+                startTime = time.time()
             elif x >= 0 and x <= 57 and y >= 53 and y <= 100:
                 new_songs()
             elif x >= 0 and x <= 54 and y >= 100 and y <= 157:
@@ -189,9 +202,14 @@ def main_scene():
                     del songs[currentSong]
                     currentSong = len(songs)- 1
             elif x >= 54 and x <= 105 and y >= 2 and y <= 49:
+                startTime = 0
+                playing = False
                 play_MIDI('Null.mid', sounds[instruments[currentInstrument]])
-
-        
+                
+        if playing == True and (time.time() - startTime) >= duration[songs[currentSong]]:
+            playing = False
+            startTime = 0
+            
         mainSurface.fill(0)
      
         #draw the play button: 
@@ -206,6 +224,11 @@ def main_scene():
         #draw the pause song button:
         mainSurface.blit(pauseButton, (55, 0))
 
+        #draw the progress bar:
+        pygame.draw.rect(mainSurface, [255, 255, 255], [530, 650, 410, 30])
+        if playing:
+            perc = 410 * ((time.time() - startTime) / int(duration[songs[currentSong]]))
+            pygame.draw.rect(mainSurface, [0, 255, 0], [530, 650, perc, 30])
      
         #draw the rename song button: 
         text = 'Rename Song'
