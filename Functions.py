@@ -113,14 +113,16 @@ def main_scene():
     font2 = pygame.font.SysFont('Arial', 50)
     font3 = pygame.font.SysFont('Arial', 35)
 
-    songs = ['Canon In D']
+    songs = ['Canon In D', 'Piano Piece #1 (In D Minor)', 'Piece #1 (In C Minor)']
     instruments = ['Full Grand']
     
     currentSong = 0
     currentInstrument = 0
 
     duration={
-        'Canon In D' : round(MidiFile('Canon_In_D.mid').length)
+        'Canon In D' : round(MidiFile('Canon_In_D.mid').length),
+        'Piano Piece #1 (In D Minor)' : round(MidiFile('Piano Piece #1 (In D Minor).mid').length),
+        'Piece #1 (In C Minor)' : round(MidiFile('Piece #1 (In C Minor).mid').length)
         }
     
     sounds={
@@ -128,12 +130,14 @@ def main_scene():
         }
     
     midi={
-        'Canon In D' : 'Canon_In_D.mid'
+        'Canon In D' : 'Canon_In_D.mid',
+        'Piano Piece #1 (In D Minor)' : 'Piano Piece #1 (In D Minor).mid',
+        'Piece #1 (In C Minor)' : 'Piece #1 (In C Minor).mid'
         }
-    
     
     playing = False
     startTime = time.time()
+    song = currentSong
             
     #-----------Main Game Loop--------------
     while True:
@@ -204,8 +208,8 @@ def main_scene():
             elif x >= 54 and x <= 105 and y >= 2 and y <= 49:
                 startTime = 0
                 playing = False
+                song = currentSong
                 play_MIDI('Null.mid', sounds[instruments[currentInstrument]])
-                
         if playing == True and (time.time() - startTime) >= duration[songs[currentSong]]:
             playing = False
             startTime = 0
@@ -225,11 +229,24 @@ def main_scene():
         mainSurface.blit(pauseButton, (55, 0))
 
         #draw the progress bar:
-        pygame.draw.rect(mainSurface, [255, 255, 255], [530, 650, 410, 30])
+        pygame.draw.rect(mainSurface, [255, 255, 255], [515, 820, 410, 30])
         if playing:
-            perc = 410 * ((time.time() - startTime) / int(duration[songs[currentSong]]))
-            pygame.draw.rect(mainSurface, [0, 255, 0], [530, 650, perc, 30])
-     
+            perc = 410 * ((time.time() - startTime) / int(duration[songs[song]]))
+            pygame.draw.rect(mainSurface, [0, 255, 0], [515, 820, perc, 30])
+            #draw the time:
+            seconds = round(time.time() - startTime)
+            minutes = 0
+            while seconds >= 60:
+                seconds -= 60
+                minutes += 1
+            if seconds < 10:
+                text = f'{minutes}:0{seconds}'
+            else:
+                text = f'{minutes}:{seconds}'
+            renderedText = font3.render(text, 0, (255, 255, 255))
+            text_rect = renderedText.get_rect(center=(720, 780))
+            mainSurface.blit(renderedText, text_rect)
+             
         #draw the rename song button: 
         text = 'Rename Song'
         renderedText = font3.render(text, 0, (0, 255, 0))
