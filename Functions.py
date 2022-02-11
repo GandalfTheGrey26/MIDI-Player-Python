@@ -151,6 +151,7 @@ def main_scene():
                 play_MIDI(midi[songs[currentSong]], sounds[instruments[currentInstrument]])
                 playing = True
                 startTime = time.time()
+                song = currentSong
             elif x >= 0 and x <= 57 and y >= 53 and y <= 100:
                 new_songs()
             elif x >= 0 and x <= 54 and y >= 100 and y <= 157:
@@ -208,7 +209,6 @@ def main_scene():
             elif x >= 54 and x <= 105 and y >= 2 and y <= 49:
                 startTime = 0
                 playing = False
-                song = currentSong
                 play_MIDI('Null.mid', sounds[instruments[currentInstrument]])
         if playing == True and (time.time() - startTime) >= duration[songs[currentSong]]:
             playing = False
