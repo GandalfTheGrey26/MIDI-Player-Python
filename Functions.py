@@ -1,9 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog
 import sf2_loader as sf
-import pygame
+import pygame, time
 from mido import MidiFile
-import time
 
 '''
 sf2_loader:
@@ -35,10 +34,17 @@ def get_file_paths(file_type):
     elif file_type == 'Soundfont':
         return filedialog.askopenfilenames(title='Add Instruments', filetypes=[("Sound Font", ".sf2")])   #file path of chosen file
 
-def play_MIDI(midi_path, sound_path):
+def play_MIDI(midi_path, sound_path, mainSurface, null):
+    font3 = pygame.font.SysFont('Arial', 35)
     print('Loading the soundfont...')
     loader = sf.sf2_loader(sound_path)
     print('Loading the song...')
+    if not null:
+        text = 'Loading...'
+        renderedText = font3.render(text, 0, (255, 255, 255))
+        text_rect = renderedText.get_rect(center=(720, 780)) 
+        mainSurface.blit(renderedText, text_rect)
+        pygame.display.flip()
     loader.play_midi_file(midi_path)
     print('Playing the song')
     
@@ -93,9 +99,9 @@ def main_scene():
     clock = pygame.time.Clock()
     
     mainSurface = pygame.display.set_mode(surfaceSize)
-
     
-    #------------Intiialize Variables---------------
+    #------------Initialize Variables---------------
+    #https://pypi.org/project/sf2-loader/
 
     #load the images:
     playButton = pygame.image.load('Play_Button.png')
@@ -106,8 +112,7 @@ def main_scene():
     plusButton = pygame.transform.smoothscale(plusButton, (0.1*plusButton.get_width(),0.1*plusButton.get_height()))
     pauseButton = pygame.image.load('Pause_Button.png')
     pauseButton = pygame.transform.smoothscale(pauseButton, (0.08*pauseButton.get_width(),0.08*pauseButton.get_height()))
-
-
+    
     #load the fonts:
     font = pygame.font.SysFont('Arial', 80)
     font2 = pygame.font.SysFont('Arial', 50)
@@ -148,7 +153,7 @@ def main_scene():
             x, y = pygame.mouse.get_pos()
             print(x, y)
             if x >= 0 and x <= 49 and y >= 0 and y <= 47:
-                play_MIDI(midi[songs[currentSong]], sounds[instruments[currentInstrument]])
+                play_MIDI(midi[songs[currentSong]], sounds[instruments[currentInstrument]], mainSurface, False)
                 playing = True
                 startTime = time.time()
                 song = currentSong
@@ -209,7 +214,7 @@ def main_scene():
             elif x >= 54 and x <= 105 and y >= 2 and y <= 49:
                 startTime = 0
                 playing = False
-                play_MIDI('Null.mid', sounds[instruments[currentInstrument]])
+                play_MIDI('Null.mid', sounds[instruments[currentInstrument]], mainSurface, True)
         if playing == True and (time.time() - startTime) >= duration[songs[currentSong]]:
             playing = False
             startTime = 0
@@ -288,8 +293,6 @@ def main_scene():
         clock.tick(60)
         
     pygame.quit()
-    
-    
     
 #------------DEAD COMMANDS-----------
 def new_song():
