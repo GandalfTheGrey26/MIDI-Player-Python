@@ -270,6 +270,7 @@ def main_scene():
         if playing:
             perc = 410 * ((time.time() - startTime) / int(duration[songs[song]]))
             pygame.draw.rect(mainSurface, [0, 255, 0], [515, 820, perc, 30])
+            pygame.draw.line(mainSurface, [255, 0, 0], (515 + perc, 820), (515 + perc, 850))
             #draw the time:
             seconds = round(time.time() - startTime)
             minutes = 0
