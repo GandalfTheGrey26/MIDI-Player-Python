@@ -20,11 +20,16 @@ Input box:
 https://python-course.eu/tkinter_entry_widgets.php
 https://www.tutorialspoint.com/python/tk_entry.htm
 https://www.tutorialspoint.com/python/python_gui_programming.htm
+
+Midi Progam:
+https://www.noterepeat.com/articles/how-to/213-midi-basics-common-terms-explained#H
 '''
 
 #dict_name = {'key' : 'value'}
 #x = dictionary.keys()
 #x = dictionary.values()
+
+auto_name = True
 
 def get_file_paths(file_type):
     root = tk.Tk()
@@ -33,6 +38,12 @@ def get_file_paths(file_type):
         return filedialog.askopenfilenames(title='Add Songs', filetypes=[("MIDI Sequence", '.mid')])
     elif file_type == 'Soundfont':
         return filedialog.askopenfilenames(title='Add Instruments', filetypes=[("Sound Font", ".sf2")])   #file path of chosen file
+    
+def getName(file_path):
+    slash = 0
+    path = (file_path.split('/'))[-1]
+    path = path.split('.')[0]
+    return path
 
 def play_MIDI(midi_path, sound_path, mainSurface, null):
     font3 = pygame.font.SysFont('Arial', 35)
@@ -53,15 +64,18 @@ def new_songs():
     try:
         newSongPaths = get_file_paths('MIDI')
         for i in range(0, len(newSongPaths)):
-            master = tk.Tk()
-            tk.Label(master, text=f'{newSongPaths[i]}/Song Name:').grid(row=0)
-            e1 = tk.Entry(master)
-            e1.grid(row=0, column=1)
-            tk.Button(master, text='Enter', command=master.quit).grid(row=0, column=2, sticky=tk.W, pady=4)
-            tk.Button(master, text='Skip', command=master.quit).grid(row=0, column=3, sticky=tk.W, pady=4)
-            tk.mainloop()
-            newSong = e1.get()
-            master.destroy()
+            if not auto_name:
+                master = tk.Tk()
+                tk.Label(master, text=f'{newSongPaths[i]}/Song Name:').grid(row=0)
+                e1 = tk.Entry(master)
+                e1.grid(row=0, column=1)
+                tk.Button(master, text='Enter', command=master.quit).grid(row=0, column=2, sticky=tk.W, pady=4)
+                tk.Button(master, text='Skip', command=master.quit).grid(row=0, column=3, sticky=tk.W, pady=4)
+                tk.mainloop()
+                newSong = e1.get()
+                master.destroy()
+            else:
+                newSong = getName(str(newSongPaths[i]))
             if newSong != '':
                 duration[f'{newSong}'] = round(MidiFile(newSongPaths[i]).length)
                 songs.append(newSong)
@@ -75,15 +89,18 @@ def new_instruments():
     try:
         newSoundPaths = get_file_paths('Soundfont')
         for i in range(0, len(newSoundPaths)):
-            master = tk.Tk()
-            tk.Label(master, text=f'{newSoundPaths[i]}/Instrument Name:').grid(row=0)
-            e1 = tk.Entry(master)
-            e1.grid(row=0, column=1)
-            tk.Button(master, text='Enter', command=master.quit).grid(row=0, column=2, sticky=tk.W, pady=4)
-            tk.Button(master, text='Skip', command=master.quit).grid(row=0, column=3, sticky=tk.W, pady=4)
-            tk.mainloop()
-            newSound = e1.get()
-            master.destroy()
+            if not auto_name:
+                master = tk.Tk()
+                tk.Label(master, text=f'{newSoundPaths[i]}/Instrument Name:').grid(row=0)
+                e1 = tk.Entry(master)
+                e1.grid(row=0, column=1)
+                tk.Button(master, text='Enter', command=master.quit).grid(row=0, column=2, sticky=tk.W, pady=4)
+                tk.Button(master, text='Skip', command=master.quit).grid(row=0, column=3, sticky=tk.W, pady=4)
+                tk.mainloop()
+                newSound = e1.get()
+                master.destroy()
+            else:
+                newSound = getName(str(newSoundPaths[i]))
             if newSound != '':
                 instruments.append(newSound)
                 sounds[f'{newSound}'] = f'{newSoundPaths[i]}'
@@ -92,7 +109,7 @@ def new_instruments():
         return 'Error'
 
 def main_scene():
-    global songs, midi, currentSong, instruments, sounds, currentInstrument, duration
+    global songs, midi, currentSong, instruments, sounds, currentInstrument, duration, auto_name
     pygame.init()
     surfaceSize = (1440, 910)
     
@@ -117,6 +134,7 @@ def main_scene():
     font = pygame.font.SysFont('Arial', 80)
     font2 = pygame.font.SysFont('Arial', 50)
     font3 = pygame.font.SysFont('Arial', 35)
+    font4 = pygame.font.SysFont('Arial', 23)
 
     songs = ['Canon In D', 'Piano Piece #1 (In D Minor)', 'Piece #1 (In C Minor)']
     instruments = ['Full Grand']
@@ -215,6 +233,11 @@ def main_scene():
                 startTime = 0
                 playing = False
                 play_MIDI('Null.mid', sounds[instruments[currentInstrument]], mainSurface, True)
+            elif x >= 0 and x <= 61 and y >= 164 and y <= 183:
+                if not auto_name:
+                    auto_name = True
+                else:
+                    auto_name = False
         if playing == True and (time.time() - startTime) >= duration[songs[currentSong]]:
             playing = False
             startTime = 0
@@ -232,6 +255,15 @@ def main_scene():
 
         #draw the pause song button:
         mainSurface.blit(pauseButton, (55, 0))
+        
+        #draw the auto name button:
+        text = 'AUTO'
+        if not auto_name:
+            renderedText = font4.render(text, 0, (255, 0, 0))
+        else:
+            renderedText = font4.render(text, 0, (0, 255, 0))
+        text_rect = renderedText.get_rect(center=(30, 176))
+        mainSurface.blit(renderedText, text_rect)
 
         #draw the progress bar:
         pygame.draw.rect(mainSurface, [255, 255, 255], [515, 820, 410, 30])
@@ -293,56 +325,6 @@ def main_scene():
         clock.tick(60)
         
     pygame.quit()
-    
-#------------DEAD COMMANDS-----------
-def new_song():
-    global currentSong, songs, midi
-    try:
-        newSongPath = get_file_path('MIDI')
-        master = tk.Tk()
-        tk.Label(master, text='Song Name:').grid(row=0)
-        e1 = tk.Entry(master)
-        e1.grid(row=0, column=1)
-        tk.Button(master, text='Enter', command=master.quit).grid(row=0, column=2, sticky=tk.W, pady=4)
-        tk.mainloop()
-        newSong = e1.get()
-        master.destroy()
-        songs.append(newSong)
-        midi[f'{newSong}'] = f'{newSongPath}'
-        currentSong = len(songs) - 1
-    except:
-        return 'Error'
-    
-def new_instrument():
-    global currentInstrument, instruments, sounds
-    try:
-        newSoundPath = get_file_path('Soundfont')
-        master = tk.Tk()
-        tk.Label(master, text='Instrument Name:').grid(row=0)
-        e1 = tk.Entry(master)
-        e1.grid(row=0, column=1)
-        tk.Button(master, text='Enter', command=master.quit).grid(row=0, column=2, sticky=tk.W, pady=4)
-        tk.mainloop()
-        newSound = e1.get()
-        master.destroy()
-        instruments.append(newSound)
-        sounds[f'{newSound}'] = f'{newSoundPath}'
-        currentInstrument = len(instruments) - 1
-    except:
-        return 'Error'
-
-def get_file_path(file_type):
-    '''
-    Opens the file explorer, and returns the
-    file path of the chosen file.
-    '''
-    root = tk.Tk()    #create the frame
-    root.withdraw()   #display the frame
-    if file_type == 'MIDI':
-        return filedialog.askopenfilename(title='Add A Song', filetypes=[("MIDI Sequence", ".mid")])   #file path of chosen file
-    elif file_type == 'Soundfont':
-        return filedialog.askopenfilename(title='Add An Instrument', filetypes=[("soundfon", ".sf2")])   #file path of chosen file
-
     
     
     
