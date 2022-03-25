@@ -30,6 +30,7 @@ https://www.noterepeat.com/articles/how-to/213-midi-basics-common-terms-explaine
 #x = dictionary.values()
 
 auto_name = True
+info = True
 
 def get_file_paths(file_type):
     root = tk.Tk()
@@ -109,7 +110,7 @@ def new_instruments():
         return 'Error'
 
 def main_scene():
-    global songs, midi, currentSong, instruments, sounds, currentInstrument, duration, auto_name
+    global songs, midi, currentSong, instruments, sounds, currentInstrument, duration, auto_name, info
     pygame.init()
     surfaceSize = (1440, 910)
     
@@ -161,14 +162,38 @@ def main_scene():
     playing = False
     startTime = time.time()
     song = currentSong
+    w, h = font.size(songs[currentSong])
+    
+    buttons = [
+        [0, 0, 49, 47],                #play button
+        [0, 53, 57, 100],              #new song
+        [0, 100, 54, 157],             #new instrument
+        [(720 - (w/2)), (100 - (h/2)), (720 + (w/2)), (100 + (h/2))],  #next song
+        [564, 180, 881, 228],          #next instrument
+        [54, 2, 105, 49],              #pause
+        [0, 164, 61, 183],             #auto name
+        [0, 198, 55, 216]              #info hover
+        ]
+    hover = [0, 0]
+    '''
+    hover[0] is wether the use IS hovering
+    hover[1] is the index (of 'buttons' list) of what the user is hovering over
+    '''
+    
+    w, h = font2.size(instruments[currentInstrument])
+    buttons[4] = [(720 - (w/2)), (200 - (h/2)), (720 + (w/2)), (200 + (h/2))]
+    
             
     #-----------Main Game Loop--------------
     while True:
         ev = pygame.event.poll()
+        x, y = pygame.mouse.get_pos()
         if ev.type == pygame.QUIT:  # Window close button clicked?
             break
+        elif ev.type == pygame.KEYDOWN:
+            if ev.key == pygame.K_c:
+                print(x, y)
         elif ev.type == pygame.MOUSEBUTTONDOWN:
-            x, y = pygame.mouse.get_pos()
             print(x, y)
             if x >= 0 and x <= 49 and y >= 0 and y <= 47:
                 play_MIDI(midi[songs[currentSong]], sounds[instruments[currentInstrument]], mainSurface, False)
@@ -179,16 +204,20 @@ def main_scene():
                 new_songs()
             elif x >= 0 and x <= 54 and y >= 100 and y <= 157:
                 new_instruments()
-            elif x >= 556 and x <= 897 and y >= 68 and y <= 132:
+            elif x >= buttons[3][0] and x <= buttons[3][2] and y >= buttons[3][1] and y <= buttons[3][3]:
                 if currentSong != len(songs) - 1:
                     currentSong += 1
                 else:
                     currentSong = 0
-            elif x >= 564 and x <= 881 and y >= 180 and y <= 228:
+                w, h = font.size(songs[currentSong])
+                buttons[3] = [(720 - (w/2)), (100 - (h/2)), (720 + (w/2)), (100 + (h/2))]
+            elif x >= buttons[4][0] and x <= buttons[4][2] and y >= buttons[4][1] and y <= buttons[4][3]:
                 if currentInstrument != len(instruments) - 1:
                     currentInstrument += 1
                 else:
                     currentInstrument = 0
+                w, h = font2.size(instruments[currentInstrument])
+                buttons[4] = [(720 - (w/2)), (200 - (h/2)), (720 + (w/2)), (200 + (h/2))]
             elif x >= 6 and x <= 280 and y >= 873 and y <= 900:
                 del sounds[instruments[currentInstrument]]
                 del instruments[currentInstrument]
@@ -213,6 +242,8 @@ def main_scene():
                     del sounds[instruments[currentInstrument]]
                     del instruments[currentInstrument]
                     currentInstrument = len(instruments) - 1
+                    w, h = font2.size(instruments[currentInstrument])
+                    buttons[4] = [(720 - (w/2)), (200 - (h/2)), (720 + (w/2)), (200 + (h/2))]
             elif x >= 1206 and x <= 1426 and y >= 873 and y <= 902:
                 master = tk.Tk()
                 tk.Label(master, text=f'Rename: {songs[currentSong]}').grid(row=0)
@@ -229,6 +260,8 @@ def main_scene():
                     del midi[songs[currentSong]]
                     del songs[currentSong]
                     currentSong = len(songs)- 1
+                    w, h = font.size(songs[currentSong])
+                    buttons[3] = [(720 - (w/2)), (100 - (h/2)), (720 + (w/2)), (100 + (h/2))]
             elif x >= 54 and x <= 105 and y >= 2 and y <= 49:
                 startTime = 0
                 playing = False
@@ -238,13 +271,28 @@ def main_scene():
                     auto_name = True
                 else:
                     auto_name = False
+            elif x >= 0 and x <= 55 and y >= 198 and y <= 216:
+                if not info:
+                    info = True
+                else:
+                    info = False
         if playing == True and (time.time() - startTime) >= duration[songs[currentSong]]:
             playing = False
             startTime = 0
+        for i in range(0, len(buttons)):
+            if x >= buttons[i][0] and y >= buttons[i][1] and x <= buttons[i][2] and y <= buttons[i][3]:
+                hover[0] = True
+                hover[1] = i 
+                break
+            else:
+                hover[0] = False
+                
+        if not info:
+            hover[0] = 0
             
         mainSurface.fill(0)
      
-        #draw the play button: 
+        #draw the play button:
         mainSurface.blit(playButton, (0, 0)) 
      
         #draw the add song button:
@@ -263,6 +311,15 @@ def main_scene():
         else:
             renderedText = font4.render(text, 0, (0, 255, 0))
         text_rect = renderedText.get_rect(center=(30, 176))
+        mainSurface.blit(renderedText, text_rect)
+        
+        #draw the info hover text button:
+        text = 'INFO'
+        if not info:
+            renderedText = font4.render(text, 0, (255, 0, 0))
+        else:
+            renderedText = font4.render(text, 0, (0, 255, 0))
+        text_rect = renderedText.get_rect(center=(30, 210))
         mainSurface.blit(renderedText, text_rect)
 
         #draw the progress bar:
@@ -311,15 +368,116 @@ def main_scene():
      
         #draw the song name:
         text = songs[currentSong]
-        renderedText = font.render(text, 0, (200, 200, 200))
+        if hover[0] == True and hover[1] == 3:
+            renderedText = font.render(text, 0, (200, 255, 200))
+        else:
+            renderedText = font.render(text, 0, (200, 200, 200))
         text_rect = renderedText.get_rect(center=((1440/2), (100)))
         mainSurface.blit(renderedText, text_rect)
           
         #draw the instrument name  
         text = instruments[currentInstrument]
-        renderedText = font2.render(text, 0, (200, 200, 200))
+        if hover[0] == True and hover[1] == 4:
+            renderedText = font2.render(text, 0, (200, 255, 200))
+        else:
+            renderedText = font2.render(text, 0, (200, 200, 200))
         text_rect = renderedText.get_rect(center=((1440/2), (200)))
         mainSurface.blit(renderedText, text_rect)
+        
+        #draw the play button hover
+        if hover[0] == True and hover[1] == 0:
+            surface = pygame.Surface((224, 119), pygame.SRCALPHA)
+            pygame.draw.rect(surface, (255, 0, 0, 100), [0, 0, 224, 119])
+            mainSurface.blit(surface, [58, 0])
+            #text:
+            text = ['press to play the',
+                    'MIDI file']
+            for i in range(0, len(text)):
+                renderedText = font4.render(text[i], 0, (200, 200, 200))
+                text_rect = renderedText.get_rect(center=(165, 47 + (i * 30)))
+                mainSurface.blit(renderedText, text_rect)
+        
+        #draw the new song button hover
+        if hover[0] == True and hover[1] == 1:
+            surface = pygame.Surface((224, 119), pygame.SRCALPHA)
+            pygame.draw.rect(surface, (255, 0, 0, 100), [0, 0, 224, 119])
+            mainSurface.blit(surface, [58, 54])
+            #text:
+            text = ['press to add a',
+                    'MIDI file']
+            for i in range(0, len(text)):
+                renderedText = font4.render(text[i], 0, (200, 200, 200))
+                text_rect = renderedText.get_rect(center=(165, 101 + (i * 30)))
+                mainSurface.blit(renderedText, text_rect)
+        
+        #draw the new instrument button hover
+        if hover[0] == True and hover[1] == 2:
+            surface = pygame.Surface((224, 119), pygame.SRCALPHA)
+            pygame.draw.rect(surface, (255, 0, 0, 100), [0, 0, 224, 119])
+            mainSurface.blit(surface, [58, 108])
+            #text:
+            text = ['press to add a',
+                    'sound file']
+            for i in range(0, len(text)):
+                renderedText = font4.render(text[i], 0, (200, 200, 200))
+                text_rect = renderedText.get_rect(center=(165, 155 + (i * 30)))
+                mainSurface.blit(renderedText, text_rect)
+                
+        #draw the auto name button hover
+        if hover[0] == True and hover[1] == 6:
+            surface = pygame.Surface((224, 140), pygame.SRCALPHA)
+            pygame.draw.rect(surface, (255, 0, 0, 100), [0, 0, 224, 140])
+            mainSurface.blit(surface, [58, 162])
+            #text:
+            text = ['press to disable',
+                    'the auto name',
+                    'feature for',
+                    'adding MIDI and',
+                    'sound files']
+            if not auto_name:
+                text[0] = 'press to enable'
+            else:
+                text[0] = 'press to disable'
+                
+            for i in range(0, len(text)):
+                renderedText = font4.render(text[i], 0, (200, 200, 200))
+                text_rect = renderedText.get_rect(center=(165, 172 + (i * 30)))
+                mainSurface.blit(renderedText, text_rect)
+                
+        #draw the pause button hover
+        if hover[0] == True and hover[1] == 5:
+            surface = pygame.Surface((224, 119), pygame.SRCALPHA)
+            pygame.draw.rect(surface, (255, 0, 0, 100), [0, 0, 224, 119])
+            mainSurface.blit(surface, [104, 0])
+            #text:
+            text = ['press to stop',
+                    'the MIDI file']
+            for i in range(0, len(text)):
+                renderedText = font4.render(text[i], 0, (200, 200, 200))
+                text_rect = renderedText.get_rect(center=(211, 47 + (i * 30)))
+                mainSurface.blit(renderedText, text_rect)
+                
+        #draw the info button hover
+        if hover[0] == True and hover[1] == 7:
+            surface = pygame.Surface((224, 140), pygame.SRCALPHA)
+            pygame.draw.rect(surface, (255, 0, 0, 100), [0, 0, 224, 140])
+            mainSurface.blit(surface, [58, 200])
+            #text:
+            text = ['press to disable',
+                    'the info hover',
+                    'information'
+                    ]
+            if not info:
+                text[0] = 'press to enable'
+            else:
+                text[0] = 'press to disable'
+                
+            for i in range(0, len(text)):
+                renderedText = font4.render(text[i], 0, (200, 200, 200))
+                text_rect = renderedText.get_rect(center=(165, 235 + (i * 30)))
+                mainSurface.blit(renderedText, text_rect)
+
+            
      
         pygame.display.flip()
         
