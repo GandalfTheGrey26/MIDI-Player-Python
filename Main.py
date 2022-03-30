@@ -7,8 +7,8 @@ main_scene()
 TITLE: Python MIDI Player
 AUTHOR: Glenn B. Middleton
 
-Created: November 23, 2021
-Updated: March 25, 2022
+CREATED: November 23, 2021
+UPDATED: March 29, 2022
 '''
 
 

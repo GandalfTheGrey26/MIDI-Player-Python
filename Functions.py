@@ -1,8 +1,8 @@
 import tkinter as tk
-from tkinter import filedialog
 import sf2_loader as sf
-import pygame, time
+from tkinter import filedialog
 from mido import MidiFile
+import pygame, time
 
 '''
 sf2_loader:
@@ -29,43 +29,89 @@ https://www.noterepeat.com/articles/how-to/213-midi-basics-common-terms-explaine
 #x = dictionary.keys()
 #x = dictionary.values()
 
-auto_name = True
-info = True
+auto_name = True     # wether files get auto named when being loaded
+info = True          # wether hover bubbles are on
+num_songs = 2        # the number of songs loaded
 
 def get_file_paths(file_type):
+    '''
+    Retrieve (a) file(s) and get its/their file path(s).
+    
+    Returns the file path of the retrieved file(s)
+    
+    PARAMETERS
+    ----------
+    file_type : string
+        the type of file that is being retrieved 
+    '''
     root = tk.Tk()
-    root.withdraw()
-    if file_type == 'MIDI':
+    root.withdraw()   # Prepare to open the file searcher
+    if file_type == 'MIDI':  # looking for midi files...?
+        # ...return the opened files' paths:
         return filedialog.askopenfilenames(title='Add Songs', filetypes=[("MIDI Sequence", '.mid')])
-    elif file_type == 'Soundfont':
+    elif file_type == 'Soundfont':  # looking for sound fonts...?
+        # ...return the opend files' paths:
         return filedialog.askopenfilenames(title='Add Instruments', filetypes=[("Sound Font", ".sf2")])   #file path of chosen file
     
 def getName(file_path):
-    slash = 0
-    path = (file_path.split('/'))[-1]
-    path = path.split('.')[0]
-    return path
+    '''
+    Get the name of a file from its path
+    
+    Returns the name of the file
+    
+    PARAMETERS
+    ----------
+    file_path : string
+        the file path the name will be extracted from
+    '''
+    # split the file path by slashes, and keep the last item of the list:
+    name = (file_path.split('/'))[-1]
+    name = name.split('.')[0] # split the name by periods, and keep the first item
+    return name # return the name of the file
 
 def play_MIDI(midi_path, sound_path, mainSurface, null):
-    font3 = pygame.font.SysFont('Arial', 35)
-    print('Loading the soundfont...')
-    loader = sf.sf2_loader(sound_path)
+    '''
+    Play the current MIDI file with the current sound font.
+    Or play the 'null.mid' (ie. stop the current song).
+    
+    Return nothing
+    
+    PARAMETERS
+    ----------
+    midi_path : string
+        the file path of the MIDI file
+    sound_path : sting
+        the file path of the sound font file
+    mainSurface : pygame surface
+        where the title of the song will be displayed
+    null : bool
+        whether the 'null.mid' file is being loaded
+    '''
+    font3 = pygame.font.SysFont('Arial', 35)    # the font of the song title
+    print('Loading the soundfont...')          
+    loader = sf.sf2_loader(sound_path)          # load the sound font
     print('Loading the song...')
-    if not null:
-        text = 'Loading...'
-        renderedText = font3.render(text, 0, (255, 255, 255))
-        text_rect = renderedText.get_rect(center=(720, 780)) 
-        mainSurface.blit(renderedText, text_rect)
-        pygame.display.flip()
-    loader.play_midi_file(midi_path)
+    if not null:                                # not playing null...?
+        text = 'Loading...'                                    # ...set the text
+        renderedText = font3.render(text, 0, (255, 255, 255))  # ...render the text
+        text_rect = renderedText.get_rect(center=(720, 780))   # ...set the text align to center
+        mainSurface.blit(renderedText, text_rect)              # ...display the text
+        pygame.display.flip()                                  # ...display the surface
+    loader.play_midi_file(midi_path)            # play the current MIDI file with the loaded sound font
     print('Playing the song')
     
 def new_songs():
+    global num_songs
+    '''
+    Add midi file(s) / song(s)
+    
+    Return 'Error' if something goes wrong
+    '''
     global currentSong, songs, midi, duration
     try:
-        newSongPaths = get_file_paths('MIDI')
-        for i in range(0, len(newSongPaths)):
-            if not auto_name:
+        newSongPaths = get_file_paths('MIDI')     # get file paths from (a) MIDI file(s) 
+        for i in range(0, len(newSongPaths)):     # loop through the file paths...
+            if not auto_name:                        # ...auto naming is off...?:
                 master = tk.Tk()
                 tk.Label(master, text=f'{newSongPaths[i]}/Song Name:').grid(row=0)
                 e1 = tk.Entry(master)
@@ -76,12 +122,13 @@ def new_songs():
                 newSong = e1.get()
                 master.destroy()
             else:
-                newSong = getName(str(newSongPaths[i]))
-            if newSong != '':
-                duration[f'{newSong}'] = round(MidiFile(newSongPaths[i]).length)
-                songs.append(newSong)
-                midi[f'{newSong}'] = f'{newSongPaths[i]}'
-                currentSong = len(songs) - 1
+                newSong = getName(str(newSongPaths[i])) # ...get the name of the file
+            if newSong != '':                # ...name is not empty...?
+                duration[f'{newSong}'] = round(MidiFile(newSongPaths[i]).length)   # ...get the duration and add it to the dictionary under the song name
+                songs.append(newSong)                                              # ...add the new song to the list
+                midi[f'{newSong}'] = f'{newSongPaths[i]}'                          # ...add the file path to the dictionary under the song name
+                currentSong = len(songs) - 1                                       # ...set current song to the last song
+                num_songs += 1                                                     # ...add one to the number of songs
     except:
         return 'Error'
     
@@ -110,7 +157,7 @@ def new_instruments():
         return 'Error'
 
 def main_scene():
-    global songs, midi, currentSong, instruments, sounds, currentInstrument, duration, auto_name, info
+    global songs, midi, currentSong, instruments, sounds, currentInstrument, duration, auto_name, info, num_songs
     pygame.init()
     surfaceSize = (1440, 910)
     
@@ -137,39 +184,39 @@ def main_scene():
     font3 = pygame.font.SysFont('Arial', 35)
     font4 = pygame.font.SysFont('Arial', 23)
 
-    songs = ['Canon In D', 'Piano Piece #1 (In D Minor)', 'Piece #1 (In C Minor)']
-    instruments = ['Full Grand']
+    songs = ['Piano Piece #1 (In D Minor)', 'Piece #1 (In C Minor)']
+    instruments = ['Full Grand', 'Piano Korg Triton']
     
     currentSong = 0
     currentInstrument = 0
 
     duration={
-        'Canon In D' : round(MidiFile('Canon_In_D.mid').length),
         'Piano Piece #1 (In D Minor)' : round(MidiFile('Piano Piece #1 (In D Minor).mid').length),
         'Piece #1 (In C Minor)' : round(MidiFile('Piece #1 (In C Minor).mid').length)
         }
     
     sounds={
-        'Full Grand' : 'Full_Grand.SF2'
+        'Full Grand' : 'Full_Grand.SF2',
+        'Piano Korg Triton' : 'Piano Korg Triton.SF2'
         }
     
     midi={
-        'Canon In D' : 'Canon_In_D.mid',
         'Piano Piece #1 (In D Minor)' : 'Piano Piece #1 (In D Minor).mid',
         'Piece #1 (In C Minor)' : 'Piece #1 (In C Minor).mid'
         }
     
-    playing = False
-    startTime = time.time()
-    song = currentSong
-    w, h = font.size(songs[currentSong])
+    playing = False                       # whether something his playing
+    startTime = time.time()               # when the current song started
+    song = currentSong                    
+    w, h = font.size(songs[currentSong])  # the width and height of the song name
+    w2, h2 = font2.size(instruments[currentInstrument])  # the width and height of the instrument name
     
-    buttons = [
+    buttons = [          # the dimensions of the buttons:
         [0, 0, 49, 47],                #play button
         [0, 53, 57, 100],              #new song
         [0, 100, 54, 157],             #new instrument
-        [(720 - (w/2)), (100 - (h/2)), (720 + (w/2)), (100 + (h/2))],  #next song
-        [564, 180, 881, 228],          #next instrument
+        [(720 - (w/2)), (100 - (h/2)), (720 + (w/2)), (100 + (h/2))],      #next song
+        [(720 - (w2/2)), (200 - (h2/2)), (720 + (w2/2)), (200 + (h2/2))],  #next instrument
         [54, 2, 105, 49],              #pause
         [0, 164, 61, 183],             #auto name
         [0, 198, 55, 216]              #info hover
@@ -178,11 +225,7 @@ def main_scene():
     '''
     hover[0] is wether the use IS hovering
     hover[1] is the index (of 'buttons' list) of what the user is hovering over
-    '''
-    
-    w, h = font2.size(instruments[currentInstrument])
-    buttons[4] = [(720 - (w/2)), (200 - (h/2)), (720 + (w/2)), (200 + (h/2))]
-    
+    '''    
             
     #-----------Main Game Loop--------------
     while True:
@@ -226,6 +269,7 @@ def main_scene():
                 del midi[songs[currentSong]]
                 del songs[currentSong]
                 currentSong = len(songs) - 1
+                num_songs -= 1
             elif x >= 403 and x <= 708 and y >= 871 and y <= 898:
                 master = tk.Tk()
                 tk.Label(master, text=f'Rename: {instruments[currentInstrument]}').grid(row=0)
@@ -287,7 +331,7 @@ def main_scene():
             else:
                 hover[0] = False
                 
-        if not info:
+        if not info and hover[1] != 3 and hover[1] != 4:
             hover[0] = 0
             
         mainSurface.fill(0)
@@ -365,6 +409,12 @@ def main_scene():
         renderedText = font3.render(text, 0, (255, 0, 0))
         text_rect = renderedText.get_rect(center=(145, 888))
         mainSurface.blit(renderedText, text_rect)                                  
+     
+        #draw the number of songs:
+        text = f'{num_songs}'
+        renderedText = font3.render(text, 0, (255, 255, 255))
+        text_rect = renderedText.get_rect(center=(80, 75))
+        mainSurface.blit(renderedText, text_rect)
      
         #draw the song name:
         text = songs[currentSong]
@@ -464,7 +514,7 @@ def main_scene():
             mainSurface.blit(surface, [58, 200])
             #text:
             text = ['press to disable',
-                    'the info hover',
+                    'the hover',
                     'information'
                     ]
             if not info:
@@ -476,8 +526,6 @@ def main_scene():
                 renderedText = font4.render(text[i], 0, (200, 200, 200))
                 text_rect = renderedText.get_rect(center=(165, 235 + (i * 30)))
                 mainSurface.blit(renderedText, text_rect)
-
-            
      
         pygame.display.flip()
         
