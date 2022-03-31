@@ -8,7 +8,7 @@ TITLE: Python MIDI Player
 AUTHOR: Glenn B. Middleton
 
 CREATED: November 23, 2021
-UPDATED: March 29, 2022
+UPDATED: March 31, 2022
 '''
 
 

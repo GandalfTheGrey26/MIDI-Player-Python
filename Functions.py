@@ -133,12 +133,17 @@ def new_songs():
         return 'Error'
     
 def new_instruments():
+    '''
+    Add (a) soundfont(s)/instrument(s)
+    
+    Return 'Error' if something goes wrong
+    '''
     global currentInstrument, instruments, sounds
     try:
-        newSoundPaths = get_file_paths('Soundfont')
-        for i in range(0, len(newSoundPaths)):
-            if not auto_name:
-                master = tk.Tk()
+        newSoundPaths = get_file_paths('Soundfont')         # get the file paths of the sound fonts
+        for i in range(0, len(newSoundPaths)):              # loop through the sound fonts...
+            if not auto_name:                                   # ...auto name is off...?
+                master = tk.Tk()       
                 tk.Label(master, text=f'{newSoundPaths[i]}/Instrument Name:').grid(row=0)
                 e1 = tk.Entry(master)
                 e1.grid(row=0, column=1)
@@ -148,27 +153,31 @@ def new_instruments():
                 newSound = e1.get()
                 master.destroy()
             else:
-                newSound = getName(str(newSoundPaths[i]))
-            if newSound != '':
-                instruments.append(newSound)
-                sounds[f'{newSound}'] = f'{newSoundPaths[i]}'
-                currentInstrument = len(sounds) - 1
+                newSound = getName(str(newSoundPaths[i]))   # ...get the name of the file
+            if newSound != '':                              # ...the name is not empty...?
+                instruments.append(newSound)                    # ...add the instrument name to the instruments list
+                sounds[f'{newSound}'] = f'{newSoundPaths[i]}'   # ...add the instrument path to the sound dictionary under the instrument name
+                currentInstrument = len(sounds) - 1             # ...set the current instrument to the last instrument
     except:
         return 'Error'
 
 def main_scene():
     global songs, midi, currentSong, instruments, sounds, currentInstrument, duration, auto_name, info, num_songs
-    pygame.init()
-    surfaceSize = (1440, 910)
+    pygame.init()                         # initialize pygame
+    surfaceSize = (1440, 910)             # the size (in px) of the pygame window
     
     clock = pygame.time.Clock()
     
-    mainSurface = pygame.display.set_mode(surfaceSize)
+    Icon = pygame.image.load('MIDI_Icon.png')  # load the window icon
+    pygame.display.set_icon(Icon)              # set the window icon
+    pygame.display.set_caption('Python MIDI Player')  # set the window title
+    
+    mainSurface = pygame.display.set_mode(surfaceSize)  # create the pygame surface
     
     #------------Initialize Variables---------------
     #https://pypi.org/project/sf2-loader/
 
-    #load the images:
+    # load and resize the images:
     playButton = pygame.image.load('Play_Button.png')
     playButton = pygame.transform.smoothscale(playButton, (0.1*playButton.get_width(),0.1*playButton.get_height()))
     musicNote = pygame.image.load('Music_Note.png')
@@ -184,30 +193,30 @@ def main_scene():
     font3 = pygame.font.SysFont('Arial', 35)
     font4 = pygame.font.SysFont('Arial', 23)
 
-    songs = ['Piano Piece #1 (In D Minor)', 'Piece #1 (In C Minor)']
-    instruments = ['Full Grand', 'Piano Korg Triton']
+    songs = ['Piano Piece #1 (In D Minor)', 'Piece #1 (In C Minor)']    # where the names of the pieces are stored
+    instruments = ['Full Grand', 'Piano Korg Triton']                   # where the names of the instruments are stored
     
-    currentSong = 0
-    currentInstrument = 0
+    currentSong = 0           # the current song (index of 'songs' list)
+    currentInstrument = 0     # the current instrument (index of 'instruments' list)
 
-    duration={
-        'Piano Piece #1 (In D Minor)' : round(MidiFile('Piano Piece #1 (In D Minor).mid').length),
-        'Piece #1 (In C Minor)' : round(MidiFile('Piece #1 (In C Minor).mid').length)
+    duration={     # where the durations of the pieces are stored
+        'Piano Piece #1 (In D Minor)' : round(MidiFile('Piano Piece #1 (In D Minor).mid').length),    # get the duration of 'Piano Piece #1'
+        'Piece #1 (In C Minor)' : round(MidiFile('Piece #1 (In C Minor).mid').length)                 # get the duration of 'Piece #1'
         }
     
-    sounds={
+    sounds={       # where the instrument file paths are stored
         'Full Grand' : 'Full_Grand.SF2',
         'Piano Korg Triton' : 'Piano Korg Triton.SF2'
         }
-    
-    midi={
+     
+    midi={         # where the song file paths are stored
         'Piano Piece #1 (In D Minor)' : 'Piano Piece #1 (In D Minor).mid',
         'Piece #1 (In C Minor)' : 'Piece #1 (In C Minor).mid'
         }
     
     playing = False                       # whether something his playing
     startTime = time.time()               # when the current song started
-    song = currentSong                    
+    song = currentSong                     
     w, h = font.size(songs[currentSong])  # the width and height of the song name
     w2, h2 = font2.size(instruments[currentInstrument])  # the width and height of the instrument name
     
@@ -228,14 +237,14 @@ def main_scene():
     '''    
             
     #-----------Main Game Loop--------------
-    while True:
+    while True:                        
         ev = pygame.event.poll()
-        x, y = pygame.mouse.get_pos()
-        if ev.type == pygame.QUIT:  # Window close button clicked?
-            break
-        elif ev.type == pygame.KEYDOWN:
-            if ev.key == pygame.K_c:
-                print(x, y)
+        x, y = pygame.mouse.get_pos()     # get the mouse position
+        if ev.type == pygame.QUIT:        # window close button clicked...?
+            break                              # ...break out of the loop
+        elif ev.type == pygame.KEYDOWN:   # key pressed...?
+            if ev.key == pygame.K_c:          # ... key is 'c'...?
+                print(x, y)                      # ...print the mouse coordinates
         elif ev.type == pygame.MOUSEBUTTONDOWN:
             print(x, y)
             if x >= 0 and x <= 49 and y >= 0 and y <= 47:
