@@ -32,6 +32,52 @@ https://www.noterepeat.com/articles/how-to/213-midi-basics-common-terms-explaine
 auto_name = True     # wether files get auto named when being loaded
 info = True          # wether hover bubbles are on
 num_songs = 2        # the number of songs loaded
+num_sounds = 2       # the number of sounds loaded
+
+def split_text(line_in, char_line):
+    '''
+    Splits a line of text by a specified number oc
+    characters per line
+    
+    Returns the split list
+    
+    PARAMETERS
+    ----------
+    line_in : string
+        the text being split into lines
+    char_line : int
+        the number of character per line
+        
+    EXAMPLE
+    -------
+    print(split_text('Hello there. My name is Glenn Middleton. I am 16 years old. I am in grade 11.', 10))
+    
+    returns
+    
+    ['Hello there.', ' My name is', 'Glenn Middleton.', ' I am 16 years', 'old. I am in', 'grade 11.']
+    '''
+    new_list = []
+    currentLine = ''
+    index = 0
+    for i in line_in:
+        if index >= char_line:
+            if i == ' ' or i == '.' or i == ',':
+                if i != ' ':
+                    currentLine += i
+                index = 0
+                new_list.append(currentLine)
+                currentLine = ''
+            else:
+                currentLine += i
+                index += 1
+        else:
+            currentLine += i
+            index += 1
+    if currentLine != '':
+        new_list.append(currentLine)
+            
+    return new_list
+
 
 def get_file_paths(file_type):
     '''
@@ -138,7 +184,7 @@ def new_instruments():
     
     Return 'Error' if something goes wrong
     '''
-    global currentInstrument, instruments, sounds
+    global currentInstrument, instruments, sounds, num_sounds
     try:
         newSoundPaths = get_file_paths('Soundfont')         # get the file paths of the sound fonts
         for i in range(0, len(newSoundPaths)):              # loop through the sound fonts...
@@ -158,11 +204,12 @@ def new_instruments():
                 instruments.append(newSound)                    # ...add the instrument name to the instruments list
                 sounds[f'{newSound}'] = f'{newSoundPaths[i]}'   # ...add the instrument path to the sound dictionary under the instrument name
                 currentInstrument = len(sounds) - 1             # ...set the current instrument to the last instrument
+                num_sounds += 1                                 # ...add one to the number of sounds
     except:
         return 'Error'
 
 def main_scene():
-    global songs, midi, currentSong, instruments, sounds, currentInstrument, duration, auto_name, info, num_songs
+    global songs, midi, currentSong, instruments, sounds, currentInstrument, duration, auto_name, info, num_songs, num_sounds
     pygame.init()                         # initialize pygame
     surfaceSize = (1440, 910)             # the size (in px) of the pygame window
     
@@ -274,6 +321,7 @@ def main_scene():
                 del sounds[instruments[currentInstrument]]
                 del instruments[currentInstrument]
                 currentInstrument = len(instruments) - 1
+                num_sounds -= 1
             elif x >= 875 and x <= 1060 and y >= 873 and y <= 902:
                 del midi[songs[currentSong]]
                 del songs[currentSong]
@@ -424,9 +472,15 @@ def main_scene():
         renderedText = font3.render(text, 0, (255, 255, 255))
         text_rect = renderedText.get_rect(center=(80, 75))
         mainSurface.blit(renderedText, text_rect)
+        
+        #draw the number of sounds:
+        text = f'{num_sounds}'
+        renderedText = font3.render(text, 0, (255, 255, 255))
+        text_rect = renderedText.get_rect(center=(80, 130))
+        mainSurface.blit(renderedText, text_rect)
      
         #draw the song name:
-        text = songs[currentSong]
+        text = f'{songs[currentSong]}({currentSong})'
         if hover[0] == True and hover[1] == 3:
             renderedText = font.render(text, 0, (200, 255, 200))
         else:
@@ -435,7 +489,7 @@ def main_scene():
         mainSurface.blit(renderedText, text_rect)
           
         #draw the instrument name  
-        text = instruments[currentInstrument]
+        text = f'{instruments[currentInstrument]}({currentInstrument})'
         if hover[0] == True and hover[1] == 4:
             renderedText = font2.render(text, 0, (200, 255, 200))
         else:
@@ -542,6 +596,3 @@ def main_scene():
         
     pygame.quit()
     
-    
-    
-
